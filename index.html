@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Weighter</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
+</head>
+<body>
+  <main class="viz-root">
+    <header class="app-header">
+      <h1>Weighter</h1>
+      <p class="subtitle">Morning weigh-ins, honest markers, and a projection of where you're headed.</p>
+    </header>
+
+    <section class="forms-row" aria-label="Log data">
+      <form id="weight-form" class="card form-card">
+        <h2>Log weight</h2>
+        <div class="field-row">
+          <label>Date
+            <input type="date" id="weight-date" required>
+          </label>
+          <label>Weight (kg)
+            <input type="text" id="weight-kg" inputmode="decimal" placeholder="82,4" required
+                   pattern="[0-9]+([.,][0-9]+)?" title="A number like 82,4 or 82.4">
+          </label>
+          <button type="submit" class="primary">Save</button>
+        </div>
+        <p class="hint" id="weight-hint">Logging the same date again replaces that day's weight.</p>
+      </form>
+
+      <form id="event-form" class="card form-card">
+        <h2>Log event</h2>
+        <div class="field-row">
+          <label>Date
+            <input type="date" id="event-date" required>
+          </label>
+          <label>What happened
+            <input type="text" id="event-label" list="event-presets" placeholder="🍺 Beer" required maxlength="60">
+            <datalist id="event-presets">
+              <option value="🍺 Beer"></option>
+              <option value="🍷 Wine"></option>
+              <option value="🍕 Junk food"></option>
+              <option value="🍰 Dessert"></option>
+              <option value="🍔 Big dinner out"></option>
+            </datalist>
+          </label>
+          <button type="submit" class="primary">Save</button>
+        </div>
+        <p class="hint">Beer, junk food… anything that might show up in the curve.</p>
+      </form>
+    </section>
+
+    <section class="stats-row" aria-label="Summary">
+      <div class="card stat-tile">
+        <div class="stat-label">Current weight</div>
+        <div class="stat-value" id="stat-current">—</div>
+        <div class="stat-sub" id="stat-current-date"></div>
+      </div>
+      <div class="card stat-tile">
+        <div class="stat-label">Trend, last 4 weeks</div>
+        <div class="stat-value" id="stat-rate">—</div>
+        <div class="stat-sub" id="stat-rate-sub"></div>
+      </div>
+      <div class="card stat-tile">
+        <div class="stat-label">Total change</div>
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-sub" id="stat-total-sub"></div>
+      </div>
+      <div class="card stat-tile">
+        <div class="stat-label">Goal</div>
+        <div class="stat-value" id="stat-goal">—</div>
+        <div class="stat-sub" id="stat-goal-eta"></div>
+      </div>
+    </section>
+
+    <div class="filter-row" role="group" aria-label="Date range">
+      <button type="button" class="range-btn" data-range="30">30 days</button>
+      <button type="button" class="range-btn" data-range="90">90 days</button>
+      <button type="button" class="range-btn" data-range="all">All</button>
+    </div>
+
+    <section class="card chart-card" aria-label="Weight chart">
+      <div class="chart-header">
+        <h2>Weight progression</h2>
+        <div class="legend" aria-hidden="true">
+          <span class="legend-item"><span class="key key-line"></span>Weight</span>
+          <span class="legend-item"><span class="key key-dash"></span>Projection</span>
+          <span class="legend-item"><span class="key key-diamond"></span>Event</span>
+        </div>
+      </div>
+      <div id="chart" class="chart-container">
+        <div id="chart-empty" class="empty-state">Log your first weigh-in to see the chart.</div>
+      </div>
+    </section>
+
+    <section class="two-col">
+      <div class="card">
+        <h2>Milestones</h2>
+        <p class="hint">If the 4-week trend holds, you'll pass these weights on:</p>
+        <table class="data-table" id="milestone-table">
+          <thead><tr><th scope="col">Weight</th><th scope="col">Projected date</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty-state" id="milestone-empty">Need a downward trend (at least two weigh-ins) to project milestones.</p>
+        <form id="goal-form" class="goal-form">
+          <label>Goal weight (kg)
+            <input type="text" id="goal-kg" inputmode="decimal" placeholder="75"
+                   pattern="[0-9]+([.,][0-9]+)?" title="A number like 75 or 74,5">
+          </label>
+          <button type="submit">Set goal</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>History</h2>
+        <table class="data-table" id="history-table">
+          <thead><tr><th scope="col">Date</th><th scope="col">Weight</th><th scope="col">Events</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty-state" id="history-empty">Nothing logged yet.</p>
+      </div>
+    </section>
+
+    <section class="card data-card">
+      <h2>Your data</h2>
+      <p class="hint">Everything is stored privately in this browser (localStorage) — nothing leaves your device. Export a backup now and then.</p>
+      <div class="field-row">
+        <button type="button" id="export-btn">Export JSON</button>
+        <button type="button" id="import-btn">Import JSON</button>
+        <input type="file" id="import-file" accept="application/json" hidden>
+      </div>
+    </section>
+  </main>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
