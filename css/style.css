@@ -1,0 +1,262 @@
+/* Weighter — mobile-first styling.
+   Base rules target phones; min-width queries widen the layout.
+   Palette roles are defined once here; light/dark swap in one place. */
+
+.viz-root {
+  --surface-1: #fcfcfb;      /* card / chart surface */
+  --page: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --series-1: #2a78d6;       /* weight line */
+  --series-1-soft: #5598e7;  /* projection (same measure, lighter step) */
+  --series-2: #1baf7a;       /* event markers */
+  --delta-good: #006300;     /* losing weight = good */
+  --delta-bad: #d03b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .viz-root {
+    --surface-1: #1a1a19;
+    --page: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --series-1: #3987e5;
+    --series-1-soft: #6da7ec;
+    --series-2: #199e70;
+    --delta-good: #0ca30c;
+    --delta-bad: #e66767;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.viz-root {
+  background: var(--page);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 16px 12px 40px;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.app-header h1 { margin: 0; font-size: 24px; }
+.subtitle { margin: 4px 0 16px; color: var(--text-secondary); font-size: 14px; }
+
+h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+/* ---------- Forms (stacked on phones, side by side when wide) ---------- */
+.forms-row, .two-col {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.field-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.field-row label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--text-secondary);
+  flex: 1 1 130px; min-width: 0;
+}
+
+input[type="date"], input[type="text"] {
+  font: inherit;
+  font-size: 16px;            /* < 16px triggers zoom-on-focus on iOS */
+  padding: 10px 12px;
+  border: 1px solid var(--baseline);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+}
+
+button {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--baseline);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+button:hover { border-color: var(--text-muted); }
+button.primary {
+  background: var(--series-1);
+  border-color: var(--series-1);
+  color: #fff;
+  font-weight: 600;
+  flex: 1 1 100%;             /* full-width thumb target on phones */
+}
+button.primary:hover { filter: brightness(1.08); }
+
+.hint { font-size: 12px; color: var(--text-muted); margin: 8px 0 0; }
+
+/* ---------- Stat tiles ---------- */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat-tile { padding: 12px; }
+.stat-label { font-size: 12px; color: var(--text-secondary); }
+.stat-value { font-size: 21px; font-weight: 600; margin-top: 2px; }
+.stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; min-height: 1em; }
+.stat-sub.good, .stat-value.good { color: var(--delta-good); }
+.stat-sub.bad, .stat-value.bad { color: var(--delta-bad); }
+
+/* ---------- Filter row ---------- */
+.filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.range-btn {
+  flex: 1 1 0;                /* equal thirds, easy to thumb */
+  font-size: 14px;
+  padding: 8px 4px;
+  min-height: 40px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.range-btn.selected {
+  font-weight: 700;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+.range-btn.selected::before { content: "✓ "; }
+
+/* ---------- Chart ---------- */
+.chart-card { margin-bottom: 12px; }
+.chart-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px; }
+
+.legend { display: flex; gap: 12px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; }
+.legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.key { display: inline-block; }
+.key-line { width: 18px; height: 0; border-top: 2px solid var(--series-1); border-radius: 2px; }
+.key-dash { width: 18px; height: 0; border-top: 2px dashed var(--series-1-soft); }
+.key-diamond {
+  width: 8px; height: 8px;
+  background: var(--series-2);
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+.chart-container { position: relative; margin-top: 8px; }
+.chart-container svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;        /* horizontal drag scrubs the crosshair, vertical still scrolls */
+}
+
+.empty-state { color: var(--text-muted); font-size: 13px; padding: 24px 0; text-align: center; }
+.empty-state[hidden] { display: none; }
+
+.tooltip {
+  position: fixed;
+  z-index: 10;
+  pointer-events: none;
+  background: var(--surface-1, #fcfcfb);
+  border: 1px solid rgba(11, 11, 11, 0.15);
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  max-width: 240px;
+}
+.tooltip .tt-date { color: #898781; margin-bottom: 4px; }
+.tooltip .tt-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.tooltip .tt-key { width: 12px; border-top: 2px solid; flex: none; }
+.tooltip .tt-key.diamond { width: 7px; height: 7px; border: 0; transform: rotate(45deg); flex: none; }
+.tooltip .tt-value { font-weight: 600; color: #0b0b0b; }
+.tooltip .tt-name { color: #52514e; }
+@media (prefers-color-scheme: dark) {
+  .tooltip { background: #1a1a19; border-color: rgba(255,255,255,0.15); }
+  .tooltip .tt-value { color: #fff; }
+  .tooltip .tt-name { color: #c3c2b7; }
+}
+
+/* ---------- Tables ---------- */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th {
+  text-align: left; font-weight: 600; color: var(--text-secondary);
+  padding: 6px 6px; border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 6px 6px;
+  border-bottom: 1px solid var(--gridline);
+  font-variant-numeric: tabular-nums;
+}
+.data-table .num { text-align: left; }
+.data-table .del-btn {
+  padding: 6px 10px; min-height: 32px; font-size: 12px; color: var(--text-muted);
+  border-color: transparent; background: transparent;
+  white-space: nowrap;
+}
+.data-table .del-btn:hover { color: var(--delta-bad); border-color: var(--baseline); }
+#history-table tbody tr td:first-child { white-space: nowrap; }
+
+.goal-form { display: flex; gap: 10px; align-items: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.goal-form label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--text-secondary);
+  flex: 1 1 110px;
+}
+.goal-form button { flex: 1 1 auto; }
+
+.data-card { margin-top: 12px; }
+.data-card .field-row button { flex: 1 1 40%; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  clip: rect(0 0 0 0); overflow: hidden; white-space: nowrap;
+}
+
+/* ---------- Wider screens ---------- */
+@media (min-width: 720px) {
+  .viz-root { padding: 24px 20px 48px; }
+  .app-header h1 { font-size: 28px; }
+  .subtitle { font-size: 15px; margin-bottom: 20px; }
+  .card { padding: 16px; }
+
+  .forms-row, .two-col { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stats-row { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat-value { font-size: 26px; }
+
+  .field-row label { flex: 0 1 auto; }
+  #weight-date, #event-date { width: 140px; }
+  #weight-kg, #goal-kg { width: 105px; }
+  #event-label { width: 165px; }
+  button.primary { flex: 0 0 auto; }
+  .range-btn { flex: 0 0 auto; padding: 8px 14px; }
+  .data-card .field-row button { flex: 0 0 auto; }
+}
