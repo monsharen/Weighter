@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
   <title>Weighter</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
@@ -99,10 +101,12 @@
       <div class="card">
         <h2>Milestones</h2>
         <p class="hint">If the 4-week trend holds, you'll pass these weights on:</p>
-        <table class="data-table" id="milestone-table">
-          <thead><tr><th scope="col">Weight</th><th scope="col">Projected date</th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="data-table" id="milestone-table">
+            <thead><tr><th scope="col">Weight</th><th scope="col">Projected date</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <p class="empty-state" id="milestone-empty">Need a downward trend (at least two weigh-ins) to project milestones.</p>
         <form id="goal-form" class="goal-form">
           <label>Goal weight (kg)
@@ -115,10 +119,12 @@
 
       <div class="card">
         <h2>History</h2>
-        <table class="data-table" id="history-table">
-          <thead><tr><th scope="col">Date</th><th scope="col">Weight</th><th scope="col">Events</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
-          <tbody></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="data-table" id="history-table">
+            <thead><tr><th scope="col">Date</th><th scope="col">Weight</th><th scope="col">Events</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
         <p class="empty-state" id="history-empty">Nothing logged yet.</p>
       </div>
     </section>

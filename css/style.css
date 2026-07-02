@@ -1,4 +1,5 @@
-/* Weighter — chart chrome & app styling.
+/* Weighter — mobile-first styling.
+   Base rules target phones; min-width queries widen the layout.
    Palette roles are defined once here; light/dark swap in one place. */
 
 .viz-root {
@@ -37,6 +38,8 @@
 
 * { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -46,63 +49,70 @@ body {
   background: var(--page);
   color: var(--text-primary);
   min-height: 100vh;
-  padding: 24px 20px 48px;
+  padding: 16px 12px 40px;
   max-width: 980px;
   margin: 0 auto;
 }
 
-.app-header h1 { margin: 0; font-size: 28px; }
-.subtitle { margin: 4px 0 20px; color: var(--text-secondary); }
+.app-header h1 { margin: 0; font-size: 24px; }
+.subtitle { margin: 4px 0 16px; color: var(--text-secondary); font-size: 14px; }
 
 h2 { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
 
 .card {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
+  border-radius: 12px;
+  padding: 14px;
 }
 
-/* ---------- Forms ---------- */
+/* ---------- Forms (stacked on phones, side by side when wide) ---------- */
 .forms-row, .two-col {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-  margin-bottom: 14px;
-}
-@media (max-width: 720px) {
-  .forms-row, .two-col { grid-template-columns: 1fr; }
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .field-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-.field-row label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.field-row label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--text-secondary);
+  flex: 1 1 130px; min-width: 0;
+}
 
 input[type="date"], input[type="text"] {
   font: inherit;
-  padding: 7px 9px;
+  font-size: 16px;            /* < 16px triggers zoom-on-focus on iOS */
+  padding: 10px 12px;
   border: 1px solid var(--baseline);
-  border-radius: 7px;
+  border-radius: 8px;
   background: var(--surface-1);
   color: var(--text-primary);
   min-width: 0;
-  width: 140px;
+  width: 100%;
+  min-height: 44px;
 }
-#event-label { width: 180px; }
 
 button {
   font: inherit;
-  padding: 8px 14px;
-  border-radius: 7px;
+  font-size: 15px;
+  padding: 10px 16px;
+  min-height: 44px;
+  border-radius: 8px;
   border: 1px solid var(--baseline);
   background: var(--surface-1);
   color: var(--text-primary);
   cursor: pointer;
+  touch-action: manipulation;
 }
 button:hover { border-color: var(--text-muted); }
 button.primary {
   background: var(--series-1);
   border-color: var(--series-1);
   color: #fff;
+  font-weight: 600;
+  flex: 1 1 100%;             /* full-width thumb target on phones */
 }
 button.primary:hover { filter: brightness(1.08); }
 
@@ -111,21 +121,28 @@ button.primary:hover { filter: brightness(1.08); }
 /* ---------- Stat tiles ---------- */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-  margin-bottom: 18px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
 }
-@media (max-width: 720px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
 
+.stat-tile { padding: 12px; }
 .stat-label { font-size: 12px; color: var(--text-secondary); }
-.stat-value { font-size: 26px; font-weight: 600; margin-top: 2px; }
+.stat-value { font-size: 21px; font-weight: 600; margin-top: 2px; }
 .stat-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; min-height: 1em; }
 .stat-sub.good, .stat-value.good { color: var(--delta-good); }
 .stat-sub.bad, .stat-value.bad { color: var(--delta-bad); }
 
 /* ---------- Filter row ---------- */
 .filter-row { display: flex; gap: 8px; margin-bottom: 10px; }
-.range-btn { font-size: 13px; padding: 6px 12px; color: var(--text-secondary); }
+.range-btn {
+  flex: 1 1 0;                /* equal thirds, easy to thumb */
+  font-size: 14px;
+  padding: 8px 4px;
+  min-height: 40px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 .range-btn.selected {
   font-weight: 700;
   color: var(--text-primary);
@@ -134,10 +151,10 @@ button.primary:hover { filter: brightness(1.08); }
 .range-btn.selected::before { content: "✓ "; }
 
 /* ---------- Chart ---------- */
-.chart-card { margin-bottom: 14px; }
-.chart-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.chart-card { margin-bottom: 12px; }
+.chart-header { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px; }
 
-.legend { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); }
+.legend { display: flex; gap: 12px; font-size: 12px; color: var(--text-secondary); flex-wrap: wrap; }
 .legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .key { display: inline-block; }
 .key-line { width: 18px; height: 0; border-top: 2px solid var(--series-1); border-radius: 2px; }
@@ -150,7 +167,12 @@ button.primary:hover { filter: brightness(1.08); }
 }
 
 .chart-container { position: relative; margin-top: 8px; }
-.chart-container svg { display: block; width: 100%; height: auto; }
+.chart-container svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;        /* horizontal drag scrubs the crosshair, vertical still scrolls */
+}
 
 .empty-state { color: var(--text-muted); font-size: 13px; padding: 24px 0; text-align: center; }
 .empty-state[hidden] { display: none; }
@@ -181,31 +203,60 @@ button.primary:hover { filter: brightness(1.08); }
 }
 
 /* ---------- Tables ---------- */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .data-table th {
   text-align: left; font-weight: 600; color: var(--text-secondary);
-  padding: 6px 8px; border-bottom: 1px solid var(--gridline);
+  padding: 6px 6px; border-bottom: 1px solid var(--gridline);
+  white-space: nowrap;
 }
 .data-table td {
-  padding: 6px 8px;
+  padding: 6px 6px;
   border-bottom: 1px solid var(--gridline);
   font-variant-numeric: tabular-nums;
 }
 .data-table .num { text-align: left; }
 .data-table .del-btn {
-  padding: 2px 8px; font-size: 12px; color: var(--text-muted);
+  padding: 6px 10px; min-height: 32px; font-size: 12px; color: var(--text-muted);
   border-color: transparent; background: transparent;
+  white-space: nowrap;
 }
 .data-table .del-btn:hover { color: var(--delta-bad); border-color: var(--baseline); }
 #history-table tbody tr td:first-child { white-space: nowrap; }
 
-.goal-form { display: flex; gap: 10px; align-items: flex-end; margin-top: 14px; }
-.goal-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
-.goal-form input { width: 100px; }
+.goal-form { display: flex; gap: 10px; align-items: flex-end; margin-top: 14px; flex-wrap: wrap; }
+.goal-form label {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 12px; color: var(--text-secondary);
+  flex: 1 1 110px;
+}
+.goal-form button { flex: 1 1 auto; }
 
-.data-card { margin-top: 14px; }
+.data-card { margin-top: 12px; }
+.data-card .field-row button { flex: 1 1 40%; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px;
   clip: rect(0 0 0 0); overflow: hidden; white-space: nowrap;
+}
+
+/* ---------- Wider screens ---------- */
+@media (min-width: 720px) {
+  .viz-root { padding: 24px 20px 48px; }
+  .app-header h1 { font-size: 28px; }
+  .subtitle { font-size: 15px; margin-bottom: 20px; }
+  .card { padding: 16px; }
+
+  .forms-row, .two-col { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stats-row { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat-value { font-size: 26px; }
+
+  .field-row label { flex: 0 1 auto; }
+  #weight-date, #event-date { width: 140px; }
+  #weight-kg, #goal-kg { width: 105px; }
+  #event-label { width: 165px; }
+  button.primary { flex: 0 0 auto; }
+  .range-btn { flex: 0 0 auto; padding: 8px 14px; }
+  .data-card .field-row button { flex: 0 0 auto; }
 }

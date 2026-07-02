@@ -1,11 +1,9 @@
 // SVG weight chart: measured line, dashed projection, event diamonds,
-// crosshair + tooltip. Rebuilt from scratch on every update.
+// crosshair + tooltip (mouse hover or touch scrub). Rebuilt on every update.
 
 import { toDayNumber, fromDayNumber } from "./trend.js";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
-const HEIGHT = 320;
-const MARGIN = { top: 16, right: 64, bottom: 30, left: 42 };
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export function formatDay(day) {
@@ -15,6 +13,17 @@ export function formatDay(day) {
 
 export function formatKg(v, decimals = 1) {
   return v.toFixed(decimals).replace(".", ",");
+}
+
+/** Chart geometry scaled to the container width (phone vs desktop). */
+function layout(width) {
+  const narrow = width < 520;
+  return {
+    height: narrow ? 260 : 320,
+    margin: narrow
+      ? { top: 14, right: 52, bottom: 26, left: 34 }
+      : { top: 16, right: 64, bottom: 30, left: 42 },
+  };
 }
 
 function el(name, attrs = {}, text) {
@@ -30,6 +39,12 @@ export function createChart(container, tooltipEl) {
 
   const resizeObserver = new ResizeObserver(() => { if (data) render(); });
   resizeObserver.observe(container);
+
+  // Touch tooltips stay up after the tap; dismiss on tap-outside or scroll.
+  document.addEventListener("pointerdown", (ev) => {
+    if (scene && !scene.svg.contains(ev.target)) hideTooltip();
+  }, true);
+  window.addEventListener("scroll", () => hideTooltip(), { passive: true });
 
   function update(newData) {
     data = newData;
@@ -48,7 +63,8 @@ export function createChart(container, tooltipEl) {
     if (empty) empty.hidden = true;
 
     const { weights, events, projection, goal, rangeDays } = data;
-    const width = Math.max(320, container.clientWidth);
+    const width = Math.max(300, container.clientWidth);
+    const { height, margin } = layout(width);
 
     // --- Domains -----------------------------------------------------------
     const lastDay = toDayNumber(weights[weights.length - 1].date);
@@ -71,14 +87,14 @@ export function createChart(container, tooltipEl) {
     const pad = Math.max(0.6, (yMax - yMin) * 0.08);
     yMin -= pad; yMax += pad;
 
-    const plotW = width - MARGIN.left - MARGIN.right;
-    const plotH = HEIGHT - MARGIN.top - MARGIN.bottom;
-    const x = (day) => MARGIN.left + ((day - xMin) / (xMax - xMin)) * plotW;
-    const y = (kg) => MARGIN.top + ((yMax - kg) / (yMax - yMin)) * plotH;
+    const plotW = width - margin.left - margin.right;
+    const plotH = height - margin.top - margin.bottom;
+    const x = (day) => margin.left + ((day - xMin) / (xMax - xMin)) * plotW;
+    const y = (kg) => margin.top + ((yMax - kg) / (yMax - yMin)) * plotH;
 
     const svg = el("svg", {
-      viewBox: `0 0 ${width} ${HEIGHT}`,
-      width, height: HEIGHT,
+      viewBox: `0 0 ${width} ${height}`,
+      width, height,
       role: "img",
       "aria-label": "Weight over time with projection. Values are listed in the history table.",
     });
@@ -87,33 +103,35 @@ export function createChart(container, tooltipEl) {
     const color = (name) => css.getPropertyValue(name).trim();
 
     // --- Gridlines + y ticks ------------------------------------------------
-    const yStep = pickStep(yMax - yMin, [0.5, 1, 2, 5, 10, 20]);
+    const maxYTicks = Math.max(3, Math.floor(plotH / 44));
+    const yStep = pickStep((yMax - yMin) / maxYTicks, [0.5, 1, 2, 5, 10, 20]);
     for (let t = Math.ceil(yMin / yStep) * yStep; t <= yMax; t += yStep) {
       const ty = y(t);
       svg.append(el("line", {
-        x1: MARGIN.left, x2: width - MARGIN.right, y1: ty, y2: ty,
+        x1: margin.left, x2: width - margin.right, y1: ty, y2: ty,
         stroke: color("--gridline"), "stroke-width": 1,
       }));
       svg.append(el("text", {
-        x: MARGIN.left - 8, y: ty + 3.5, "text-anchor": "end",
+        x: margin.left - 7, y: ty + 3.5, "text-anchor": "end",
         "font-size": 11, fill: color("--text-muted"),
       }, formatKg(t, yStep < 1 ? 1 : 0)));
     }
     svg.append(el("text", {
-      x: MARGIN.left - 8, y: MARGIN.top - 4, "text-anchor": "end",
+      x: margin.left - 7, y: margin.top - 4, "text-anchor": "end",
       "font-size": 11, fill: color("--text-muted"),
     }, "kg"));
 
     // --- X axis -------------------------------------------------------------
     svg.append(el("line", {
-      x1: MARGIN.left, x2: width - MARGIN.right,
-      y1: MARGIN.top + plotH, y2: MARGIN.top + plotH,
+      x1: margin.left, x2: width - margin.right,
+      y1: margin.top + plotH, y2: margin.top + plotH,
       stroke: color("--baseline"), "stroke-width": 1,
     }));
-    const xStep = pickStep((xMax - xMin) / 6, [1, 2, 7, 14, 30, 60, 90]);
+    const maxXTicks = Math.max(3, Math.floor(plotW / 78));
+    const xStep = pickStep((xMax - xMin) / maxXTicks, [1, 2, 7, 14, 30, 60, 90]);
     for (let t = Math.ceil(xMin / xStep) * xStep; t <= xMax; t += xStep) {
       svg.append(el("text", {
-        x: x(t), y: MARGIN.top + plotH + 18, "text-anchor": "middle",
+        x: x(t), y: margin.top + plotH + 17, "text-anchor": "middle",
         "font-size": 11, fill: color("--text-muted"),
       }, formatDay(t)));
     }
@@ -122,11 +140,11 @@ export function createChart(container, tooltipEl) {
     if (goal != null && goal >= yMin && goal <= yMax) {
       const gy = y(goal);
       svg.append(el("line", {
-        x1: MARGIN.left, x2: width - MARGIN.right, y1: gy, y2: gy,
+        x1: margin.left, x2: width - margin.right, y1: gy, y2: gy,
         stroke: color("--baseline"), "stroke-width": 1,
       }));
       svg.append(el("text", {
-        x: width - MARGIN.right + 6, y: gy + 3.5,
+        x: width - margin.right + 5, y: gy + 3.5,
         "font-size": 11, fill: color("--text-muted"),
       }, `Goal ${formatKg(goal, Number.isInteger(goal) ? 0 : 1)}`));
     }
@@ -141,7 +159,7 @@ export function createChart(container, tooltipEl) {
       }));
       if (projection.reachesGoal) {
         svg.append(el("text", {
-          x: Math.min(x(projection.endDay), width - MARGIN.right) + 6,
+          x: Math.min(x(projection.endDay), width - margin.right) + 5,
           y: y(projection.endKg) - 8,
           "font-size": 11, "font-weight": 600, fill: color("--text-secondary"),
         }, formatDay(projection.endDay)));
@@ -156,7 +174,9 @@ export function createChart(container, tooltipEl) {
       d: path, fill: "none", stroke: color("--series-1"),
       "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round",
     }));
-    const drawDots = visible.length <= 45 ? visible : [visible[visible.length - 1]];
+    // On narrow plots daily dots turn to mush — draw them only when they fit.
+    const maxDots = Math.floor(plotW / 9);
+    const drawDots = visible.length <= maxDots ? visible : [visible[visible.length - 1]];
     for (const w of drawDots) {
       svg.append(el("circle", {
         cx: x(w.day), cy: y(w.kg), r: 4,
@@ -176,7 +196,7 @@ export function createChart(container, tooltipEl) {
       if (!eventDays.has(e.day)) eventDays.set(e.day, []);
       eventDays.get(e.day).push(e.label);
     }
-    const laneY = MARGIN.top + plotH - 10;
+    const laneY = margin.top + plotH - 10;
     for (const day of eventDays.keys()) {
       svg.append(el("rect", {
         x: -4.5, y: -4.5, width: 9, height: 9, rx: 1,
@@ -185,20 +205,20 @@ export function createChart(container, tooltipEl) {
       }));
     }
 
-    // --- Hover layer ----------------------------------------------------------
+    // --- Hover / touch-scrub layer ---------------------------------------------
     const crosshair = el("line", {
-      y1: MARGIN.top, y2: MARGIN.top + plotH,
+      y1: margin.top, y2: margin.top + plotH,
       stroke: color("--baseline"), "stroke-width": 1, visibility: "hidden",
     });
     svg.append(crosshair);
     const overlay = el("rect", {
-      x: MARGIN.left, y: MARGIN.top, width: plotW, height: plotH,
+      x: margin.left, y: margin.top, width: plotW, height: plotH,
       fill: "transparent",
     });
     svg.append(overlay);
 
     scene = {
-      svg, crosshair, x, xMin, xMax, lastDay,
+      svg, crosshair, x, xMin, xMax, lastDay, margin,
       weightsByDay: new Map(visible.map((w) => [w.day, w.kg])),
       eventDays, projection,
       colors: {
@@ -207,18 +227,25 @@ export function createChart(container, tooltipEl) {
         series2: color("--series-2"),
       },
     };
-    overlay.addEventListener("pointermove", onPointerMove);
-    overlay.addEventListener("pointerleave", hideTooltip);
+    overlay.addEventListener("pointermove", onPointer);
+    overlay.addEventListener("pointerdown", onPointer); // tap on touch screens
+    // A touch tap fires pointerleave right after pointerup — keep the tooltip
+    // up for touch; it's dismissed by tapping elsewhere or scrolling.
+    overlay.addEventListener("pointerleave", (ev) => {
+      if (ev.pointerType !== "touch") hideTooltip();
+    });
+    overlay.addEventListener("pointercancel", hideTooltip);
 
     container.append(svg);
   }
 
-  function onPointerMove(ev) {
+  function onPointer(ev) {
     if (!scene) return;
     const rect = scene.svg.getBoundingClientRect();
     const scale = rect.width / scene.svg.viewBox.baseVal.width;
     const px = (ev.clientX - rect.left) / scale;
-    const pointerDay = scene.xMin + ((px - MARGIN.left) / (scene.x(scene.xMax) - MARGIN.left)) * (scene.xMax - scene.xMin);
+    const plotW = scene.x(scene.xMax) - scene.margin.left;
+    const pointerDay = scene.xMin + ((px - scene.margin.left) / plotW) * (scene.xMax - scene.xMin);
 
     // Snap to the nearest day that has something to say: a weigh-in, an event,
     // or (past the last weigh-in) any projected day.
@@ -240,10 +267,12 @@ export function createChart(container, tooltipEl) {
     scene.crosshair.setAttribute("visibility", "visible");
 
     renderTooltip(day);
-    const ttX = Math.min(ev.clientX + 14, window.innerWidth - tooltipEl.offsetWidth - 8);
-    const ttY = Math.min(ev.clientY + 14, window.innerHeight - tooltipEl.offsetHeight - 8);
-    tooltipEl.style.left = `${Math.max(4, ttX)}px`;
-    tooltipEl.style.top = `${Math.max(4, ttY)}px`;
+    // Keep the tooltip on screen — above the finger on touch, beside the mouse.
+    const touch = ev.pointerType === "touch";
+    const rawX = touch ? ev.clientX - tooltipEl.offsetWidth / 2 : ev.clientX + 14;
+    const rawY = touch ? ev.clientY - tooltipEl.offsetHeight - 24 : ev.clientY + 14;
+    tooltipEl.style.left = `${clamp(rawX, 4, window.innerWidth - tooltipEl.offsetWidth - 4)}px`;
+    tooltipEl.style.top = `${clamp(rawY, 4, window.innerHeight - tooltipEl.offsetHeight - 4)}px`;
   }
 
   // Tooltip DOM is built with textContent only — event labels are user data.
@@ -299,10 +328,14 @@ export function createChart(container, tooltipEl) {
   return { update };
 }
 
-/** Smallest step from `options` that yields at most ~7 divisions of `span`. */
-function pickStep(span, options) {
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+/** Smallest step from `options` that yields at most ~`span/step` divisions. */
+function pickStep(minStep, options) {
   for (const s of options) {
-    if (span / s <= 7) return s;
+    if (s >= minStep) return s;
   }
   return options[options.length - 1];
 }
