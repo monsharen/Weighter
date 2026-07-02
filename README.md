@@ -25,10 +25,8 @@ npm test        # unit tests for the trend/projection math (Node 18+)
 
 ## Deploying to GitHub Pages
 
-The workflow in `.github/workflows/deploy.yml` deploys the site on every push
-to `main`. One-time setup:
-
-1. In the repo, go to **Settings → Pages**.
-2. Under **Build and deployment → Source**, choose **GitHub Actions**.
-3. Merge/push to `main`. The site appears at
-   `https://<user>.github.io/Weighter/`.
+GitHub Pages serves the site straight from the `main` branch
+(**Settings → Pages → Deploy from a branch → `main`**), so every merge to
+`main` goes live at https://monsharen.github.io/Weighter/ within a minute or
+two — no build step. The `.nojekyll` file makes Pages publish the files as-is,
+and `.github/workflows/ci.yml` runs the unit tests on every push and PR.
